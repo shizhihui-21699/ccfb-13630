@@ -1,0 +1,7 @@
+{
+  "name": "nested-fanout-12-levels",
+  "description": "每层 100 条、嵌套 12 层的用户关系链 — 组合爆炸,正是把数据库拖垮的那类查询",
+  "body": {
+    "query": "query DeepNest {\n  users(first: 100) {\n    id\n    friends(first: 100) {\n      id\n      friends(first: 100) {\n        id\n        friends(first: 100) {\n          id\n          friends(first: 100) {\n            id\n            friends(first: 100) {\n              id\n              friends(first: 100) {\n                id\n                friends(first: 100) {\n                  id\n                  friends(first: 100) {\n                    id\n                    friends(first: 100) {\n                      id\n                      friends(first: 100) {\n                        id\n                        displayName\n                      }\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}"
+  }
+}

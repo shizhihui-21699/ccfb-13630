@@ -1,0 +1,7 @@
+{
+  "name": "search-aggregation-abuse",
+  "description": "重复调用定价最高的 search/analytics 重字段,把慢查询叠在一个请求里",
+  "body": {
+    "query": "query Expensive {\n  s1: search(term: \"a\", first: 100) { __typename ... on User { id posts(first: 100) { id comments(first: 50) { id } } } }\n  s2: search(term: \"b\", first: 100) { __typename ... on User { id posts(first: 100) { id comments(first: 50) { id } } } }\n  s3: search(term: \"c\", first: 100) { __typename ... on User { id posts(first: 100) { id comments(first: 50) { id } } } }\n  s4: search(term: \"d\", first: 100) { __typename ... on User { id posts(first: 100) { id comments(first: 50) { id } } } }\n  analytics(days: 90) { date signups activeUsers revenueCents }\n  auditLog(limit: 100)\n}"
+  }
+}

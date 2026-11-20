@@ -1,0 +1,7 @@
+{
+  "name": "over-hard-page-limit",
+  "description": "单参数直接索要 5 万行,超过硬上限,应在估算阶段直接拒绝而不是截断放行",
+  "body": {
+    "query": "query Dump {\n  users(first: 50000) {\n    id\n    email\n    orders(limit: 1000) { id totalCents items(limit: 100) { quantity product { name } } }\n  }\n}"
+  }
+}

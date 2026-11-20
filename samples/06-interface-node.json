@@ -1,0 +1,4 @@
+{
+  "query": "query NodeLookup($id: ID!) {\n  node(id: $id) {\n    __typename\n    ... on User { id displayName posts(first: 3) { id title } }\n    ... on Post { id title body author { id displayName } }\n    ... on Product { id name priceCents reviews(first: 2) { id rating } }\n  }\n}",
+  "variables": { "id": "u_42" }
+}

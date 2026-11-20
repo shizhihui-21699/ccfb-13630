@@ -1,0 +1,4 @@
+{
+  "query": "query HeavyButLegit($days: Int!) {\n  analytics(days: $days) {\n    date\n    signups\n    activeUsers\n    revenueCents\n  }\n  auditLog(limit: 25)\n}",
+  "variables": { "days": 30 }
+}

@@ -1,0 +1,4 @@
+{
+  "query": "query UserFeed($first: Int = 10) {\n  users(first: $first) {\n    id\n    displayName\n    posts(first: 5) {\n      id\n      title\n      tags\n      comments(first: 3) {\n        id\n        body\n        author { displayName }\n      }\n    }\n  }\n}",
+  "variables": { "first": 10 }
+}

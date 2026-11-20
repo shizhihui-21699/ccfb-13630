@@ -1,0 +1,7 @@
+{
+  "name": "fragment-amplification",
+  "description": "片段里套片段再重复展开,同一片段被 spread 多次,静态看很短实际字段数和fan-out爆炸",
+  "body": {
+    "query": "fragment UserCore on User {\n  id\n  displayName\n  friends(first: 50) { id displayName }\n  orders(limit: 20) { id totalCents items(limit: 10) { quantity product { name priceCents } } }\n}\n\nfragment Wide on User {\n  ...UserCore\n  a: friends(first: 50) { ...UserCore }\n  b: friends(first: 50) { ...UserCore }\n  c: friends(first: 50) { ...UserCore }\n}\n\nquery FragmentBomb {\n  users(first: 50) { ...Wide }\n}"
+  }
+}

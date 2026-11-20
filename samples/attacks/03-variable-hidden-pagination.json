@@ -1,0 +1,8 @@
+{
+  "name": "pagination-hidden-in-variable",
+  "description": "页大小藏在 GraphQL 变量里,试图绕过只检查字面量参数的简单网关",
+  "body": {
+    "query": "query Sneaky($pageSize: Int) {\n  users(first: $pageSize) {\n    id\n    posts(first: $pageSize) {\n      id\n      comments(first: $pageSize) { id body author { displayName } }\n    }\n  }\n}",
+    "variables": { "pageSize": 5000 }
+  }
+}

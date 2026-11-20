@@ -1,0 +1,7 @@
+{
+  "name": "default-pagination-trap",
+  "description": "完全不写分页参数,利用后端默认页大小在深层嵌套中悄悄放大",
+  "body": {
+    "query": "query Defaults {\n  users {\n    id\n    posts {\n      id\n      comments {\n        id\n        author {\n          id\n          posts {\n            id\n            comments { id body }\n          }\n        }\n      }\n    }\n  }\n}"
+  }
+}

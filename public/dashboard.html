@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GraphQL Cost Gateway — Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c2330;
+    --border: #2d3748;
+    --fg: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --amber: #d29922;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  header {
+    padding: 20px 28px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 20px; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  .live {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  main { padding: 24px 28px 60px; max-width: 1400px; margin: 0 auto; }
+  section { margin-bottom: 28px; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  .card .value { font-size: 26px; font-weight: 650; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .card .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; color: var(--muted); font-weight: 500; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid #21262d; vertical-align: top; }
+  tr:hover td { background: var(--panel-2); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; letter-spacing: .03em;
+  }
+  .pill.allowed { background: rgba(63,185,80,.15); color: var(--green); }
+  .pill.rejected { background: rgba(248,81,73,.15); color: var(--red); }
+  .pill.tier-free { background: rgba(139,148,158,.2); color: var(--muted); }
+  .pill.tier-pro { background: rgba(88,166,255,.18); color: var(--accent); }
+  .pill.tier-enterprise { background: rgba(188,140,255,.18); color: var(--purple); }
+  .bar { height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; margin-top: 6px; }
+  .bar > span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .bar > span.warn { background: var(--amber); }
+  .bar > span.over { background: var(--red); }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 140px; padding-top: 8px; }
+  .chart .col { flex: 1; min-width: 4px; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; height: 100%; }
+  .chart .seg { border-radius: 2px 2px 0 0; }
+  .chart .seg.ok { background: var(--green); opacity: .85; }
+  .chart .seg.no { background: var(--red); opacity: .85; }
+  .chart-x { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 6px; }
+  pre.query {
+    margin: 6px 0 0; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; font-size: 11.5px; color: var(--muted);
+    overflow-x: auto; max-width: 560px; white-space: pre-wrap; word-break: break-word;
+  }
+  .reason { color: var(--red); font-size: 12px; margin-top: 4px; }
+  .filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filters button {
+    background: var(--panel); color: var(--muted); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 14px; font-size: 12px; cursor: pointer;
+  }
+  .filters button.active { color: var(--fg); border-color: var(--accent); background: rgba(88,166,255,.12); }
+  .scroll { max-height: 560px; overflow-y: auto; }
+  .empty { color: var(--muted); padding: 24px; text-align: center; }
+  code.code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GraphQL Cost Gateway</h1>
+  <span class="sub">pre-execution query cost analysis · caller quota enforcement · audit trail</span>
+  <span class="live"><span class="dot"></span> live — refreshes every 3s · <span id="updated"></span></span>
+</header>
+
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <section>
+    <h2>Cost timeline (per minute)</h2>
+    <div class="card">
+      <div class="chart" id="chart"></div>
+      <div class="chart-x"><span id="chart-start"></span><span>green = allowed cost · red = rejected requests</span><span id="chart-end"></span></div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div>
+      <h2>Caller consumption &amp; quotas</h2>
+      <div class="card scroll" id="callers"></div>
+    </div>
+    <div>
+      <h2>Rejected queries — where they blew the budget</h2>
+      <div class="card scroll" id="rejections"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Recent requests</h2>
+    <div class="filters" id="filters">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="allowed">Allowed</button>
+      <button data-filter="rejected">Rejected</button>
+    </div>
+    <div class="card scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th><th>Caller</th><th>Decision</th><th class="mono">Cost</th>
+            <th class="mono">Resolutions</th><th class="mono">Depth</th><th class="mono">Page max</th>
+            <th>Query / reason</th>
+          </tr>
+        </thead>
+        <tbody id="events"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+const nf = new Intl.NumberFormat('en-US');
+const fmt = (v) => v == null ? '—' : nf.format(v);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let filter = 'all';
+
+function barPct(used, limit) {
+  const pct = Math.min(100, (used / Math.max(1, limit)) * 100);
+  const cls = pct >= 100 ? 'over' : pct >= 75 ? 'warn' : '';
+  return `<div class="bar"><span class="${cls}" style="width:${pct.toFixed(1)}%"></span></div>`;
+}
+
+async function refresh() {
+  let data;
+  try {
+    const r = await fetch('/admin/stats');
+    data = await r.json();
+  } catch (e) {
+    document.getElementById('updated').textContent = 'connection error';
+    return;
+  }
+  document.getElementById('updated').textContent = 'updated ' + new Date(data.generatedAt).toLocaleTimeString();
+
+  // ---- KPIs ----
+  const rejectRate = data.totals.requests ? (100 * data.totals.rejected / data.totals.requests).toFixed(1) : '0.0';
+  document.getElementById('kpis').innerHTML = [
+    { label: 'Requests audited', value: fmt(data.totals.requests), hint: `${fmt(data.totals.allowed)} allowed · ${fmt(data.totals.rejected)} rejected` },
+    { label: 'Reject rate', value: rejectRate + '%', hint: 'share blocked before execution' },
+    { label: 'Cost billed (allowed)', value: fmt(data.totals.cost), hint: 'work points charged to quotas' },
+    { label: 'Active callers', value: fmt(data.callers.length), hint: 'directory + anonymous attempts' },
+  ].map((c) => `<div class="card"><div class="label">${c.label}</div><div class="value">${c.value}</div><div class="hint">${c.hint}</div></div>`).join('');
+
+  // ---- Timeline chart ----
+  const maxCost = Math.max(1, ...data.timeline.map((t) => t.cost));
+  const maxRej = Math.max(1, ...data.timeline.map((t) => t.rejected));
+  document.getElementById('chart').innerHTML = data.timeline.map((t) => {
+    const okH = (t.cost / maxCost) * 88;
+    const noH = (t.rejected / maxRej) * 12;
+    return `<div class="col" title="${t.minute} — cost ${fmt(t.cost)}, rejected ${t.rejected}">
+      <div class="seg no" style="height:${noH.toFixed(1)}%"></div>
+      <div class="seg ok" style="height:${okH.toFixed(1)}%"></div>
+    </div>`;
+  }).join('') || '<div class="empty">No traffic yet — run <code class="code">npm run demo</code></div>';
+  if (data.timeline.length) {
+    document.getElementById('chart-start').textContent = data.timeline[0].minute;
+    document.getElementById('chart-end').textContent = data.timeline.at(-1).minute;
+  }
+
+  // ---- Callers ----
+  document.getElementById('callers').innerHTML = data.callers.length ? data.callers.map((c) => {
+    const q = c.quota;
+    const min = c.remaining?.minute;
+    const day = c.remaining?.day;
+    return `<div style="padding:12px 4px;border-bottom:1px solid #21262d">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <strong>${esc(c.callerName)}</strong>
+        <span class="pill tier-${esc(c.tier)}">${esc(c.tier)}</span>
+        <span class="mono" style="color:var(--muted);font-size:11px">${esc(c.apiKey)}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+        <div>
+          <div class="mono" style="font-size:12px">minute: ${fmt(min?.used ?? 0)} / ${fmt(q?.perMinuteBudget ?? '∞')}</div>
+          ${q ? barPct(min?.used ?? 0, q.perMinuteBudget) : ''}
+        </div>
+        <div>
+          <div class="mono" style="font-size:12px">day: ${fmt(day?.used ?? 0)} / ${fmt(q?.perDayBudget ?? '∞')}</div>
+          ${q ? barPct(day?.used ?? 0, q.perDayBudget) : ''}
+        </div>
+      </div>
+      <div class="hint" style="color:var(--muted);font-size:12px;margin-top:6px">
+        per-query cap ${fmt(q?.maxQueryCost)} · depth ${q?.maxDepth} ·
+        ${fmt(c.allowed)} allowed / ${fmt(c.rejected)} rejected · peak query ${fmt(c.maxCost)} pts
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">No callers seen yet</div>';
+
+  // ---- Rejections ----
+  const rejected = data.recent.filter((e) => e.decision === 'rejected').slice(0, 12);
+  document.getElementById('rejections').innerHTML = rejected.length ? rejected.map((e) => `
+    <div style="padding:10px 4px;border-bottom:1px solid #21262d">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <strong>${esc(e.callerName)}</strong>
+        <span class="pill rejected">${esc(e.rejectionCode ?? 'REJECTED')}</span>
+        <span class="mono" style="color:var(--muted);font-size:11px">${new Date(e.timestamp).toLocaleTimeString()}</span>
+        <span class="mono" style="margin-left:auto">${fmt(e.estimatedCost)} pts · depth ${e.depth}</span>
+      </div>
+      <div class="reason">${esc(e.reason ?? '')}</div>
+      <pre class="query">${esc(e.queryPreview)}</pre>
+    </div>`).join('') : '<div class="empty">No rejections — everyone is behaving (so far)</div>';
+
+  // ---- Recent events table ----
+  const rows = data.recent.filter((e) => filter === 'all' || e.decision === filter);
+  document.getElementById('events').innerHTML = rows.length ? rows.map((e) => `
+    <tr>
+      <td class="mono" style="white-space:nowrap">${new Date(e.timestamp).toLocaleTimeString()}</td>
+      <td>${esc(e.callerName)}<div style="color:var(--muted);font-size:11px">${esc(e.tier ?? '—')}</div></td>
+      <td><span class="pill ${e.decision}">${e.decision}</span></td>
+      <td class="mono">${fmt(e.estimatedCost)}</td>
+      <td class="mono">${fmt(e.estimatedResolutions)}</td>
+      <td class="mono">${e.depth}</td>
+      <td class="mono">${fmt(e.maxPageSize)}</td>
+      <td style="max-width:600px">
+        <pre class="query" style="margin:0">${esc(e.queryPreview)}</pre>
+        ${e.reason ? `<div class="reason">${esc(e.reason)}</div>` : ''}
+      </td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No events match this filter</td></tr>';
+}
+
+document.getElementById('filters').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+  filter = btn.dataset.filter;
+  document.querySelectorAll('#filters button').forEach((b) => b.classList.toggle('active', b === btn));
+  refresh();
+});
+
+refresh();
+setInterval(refresh, 3000);
+</script>
+</body>
+</html>

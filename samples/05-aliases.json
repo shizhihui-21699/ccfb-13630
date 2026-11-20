@@ -1,0 +1,3 @@
+{
+  "query": "query AliasDashboard {\n  me {\n    id\n    recent: posts(first: 5) { id title }\n    pinned: posts(first: 3) { id title tags }\n  }\n  topProducts: products(first: 5) { id name priceCents }\n  cheapProducts: products(first: 5, take: 5) { id name sku }\n}"
+}

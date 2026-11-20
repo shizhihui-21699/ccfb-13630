@@ -1,0 +1,3 @@
+{
+  "query": "query MyProfile {\n  me {\n    id\n    displayName\n    email\n    role\n    createdAt\n  }\n}"
+}

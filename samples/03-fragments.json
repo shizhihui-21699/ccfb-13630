@@ -1,0 +1,3 @@
+{
+  "query": "fragment UserSummary on User {\n  id\n  displayName\n  role\n  friends(first: 3) {\n    id\n    displayName\n  }\n}\n\nfragment PostDetails on Post {\n  id\n  title\n  tags\n  author { ...UserSummary }\n  comments(first: 2) {\n    id\n    body\n    author { ...UserSummary }\n  }\n}\n\nquery Dashboard {\n  me { ...UserSummary }\n  posts(first: 5) {\n    edges { node { ...PostDetails } }\n  }\n}"
+}

@@ -1,0 +1,4 @@
+{
+  "query": "query Search($term: String!, $n: Int!) {\n  search(term: $term, first: $n) {\n    __typename\n    ... on User { id displayName email }\n    ... on Post { id title author { displayName } }\n    ... on Product { id name priceCents sku }\n  }\n}",
+  "variables": { "term": "graphql", "n": 8 }
+}
